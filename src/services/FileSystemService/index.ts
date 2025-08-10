@@ -101,6 +101,18 @@ const createFileSystemService = () => ({
       });
     }
   },
+
+  removeDir: (dirPath: string) => {
+    try {
+      if (fs.existsSync(dirPath)) {
+        fs.rmSync(dirPath, { recursive: true, force: true });
+      }
+    } catch (error) {
+      throw new FileSystemError(`Failed to remove directory: ${dirPath}`, {
+        options: { cause: error },
+      });
+    }
+  },
 });
 
 export { createFileSystemService };

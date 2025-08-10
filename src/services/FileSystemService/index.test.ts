@@ -271,4 +271,140 @@ describe('FileSystemService', () => {
       rmSyncSpy.mockRestore();
     });
   });
+
+  describe('removeDir', () => {
+    it('removes directory successfully', () => {
+      const dirPath = path.join(testDir, 'dir-to-remove');
+
+      fs.mkdirSync(dirPath, { recursive: true });
+      fs.writeFileSync(path.join(dirPath, 'file.txt'), 'content');
+
+      expect.soft(fs.existsSync(dirPath)).toBe(true);
+
+      service.removeDir(dirPath);
+
+      expect.soft(fs.existsSync(dirPath)).toBe(false);
+    });
+
+    it('removes directory with nested structure', () => {
+      const dirPath = path.join(testDir, 'dir-with-nested');
+      const nestedDir = path.join(dirPath, 'nested', 'deep');
+
+      fs.mkdirSync(nestedDir, { recursive: true });
+      fs.writeFileSync(path.join(nestedDir, 'file1.txt'), 'content1');
+      fs.writeFileSync(path.join(dirPath, 'file2.txt'), 'content2');
+      fs.writeFileSync(path.join(dirPath, 'nested', 'file3.txt'), 'content3');
+
+      expect.soft(fs.existsSync(dirPath)).toBe(true);
+      expect.soft(fs.existsSync(nestedDir)).toBe(true);
+
+      service.removeDir(dirPath);
+
+      expect.soft(fs.existsSync(dirPath)).toBe(false);
+      expect.soft(fs.existsSync(nestedDir)).toBe(false);
+    });
+
+    it('does not throw if directory does not exist', () => {
+      const nonExistentDir = path.join(testDir, 'non-existent-dir');
+
+      expect.soft(fs.existsSync(nonExistentDir)).toBe(false);
+
+      expect(() => {
+        service.removeDir(nonExistentDir);
+      }).not.toThrow();
+    });
+
+    it('removes directory with readonly files', () => {
+      const dirPath = path.join(testDir, 'dir-with-readonly');
+      const filePath = path.join(dirPath, 'readonly-file.txt');
+
+      fs.mkdirSync(dirPath, { recursive: true });
+      fs.writeFileSync(filePath, 'readonly content');
+
+      // Make file readonly (this might not work on all systems, but won't break the test)
+      try {
+        fs.chmodSync(filePath, 0o444);
+      } catch {
+        // Ignore chmod errors on systems that don't support it
+      }
+
+      expect.soft(fs.existsSync(dirPath)).toBe(true);
+
+      service.removeDir(dirPath);
+
+      expect.soft(fs.existsSync(dirPath)).toBe(false);
+    });
+
+    it('throws FileSystemError on permission error', () => {
+      const dirPath = path.join(testDir, 'protected-dir');
+
+      fs.mkdirSync(dirPath, { recursive: true });
+
+      const rmSyncSpy = vi.spyOn(fs, 'rmSync').mockImplementation(() => {
+        const error = new Error('Permission denied') as NodeError;
+
+        error.code = 'EACCES';
+        throw error;
+      });
+
+      expect
+        .soft(() => {
+          service.removeDir(dirPath);
+        })
+        .toThrow(FileSystemError);
+      expect
+        .soft(() => {
+          service.removeDir(dirPath);
+        })
+        .toThrow(`Failed to remove directory: ${dirPath}`);
+
+      rmSyncSpy.mockRestore();
+    });
+
+    it('throws FileSystemError on file system error', () => {
+      const dirPath = path.join(testDir, 'problematic-dir');
+
+      fs.mkdirSync(dirPath, { recursive: true });
+
+      const rmSyncSpy = vi.spyOn(fs, 'rmSync').mockImplementation(() => {
+        throw new Error('Disk I/O error');
+      });
+
+      expect
+        .soft(() => {
+          service.removeDir(dirPath);
+        })
+        .toThrow(FileSystemError);
+      expect
+        .soft(() => {
+          service.removeDir(dirPath);
+        })
+        .toThrow(`Failed to remove directory: ${dirPath}`);
+
+      rmSyncSpy.mockRestore();
+    });
+
+    it('handles symlinks correctly', () => {
+      const realDir = path.join(testDir, 'real-dir');
+      const symlinkDir = path.join(testDir, 'symlink-dir');
+
+      fs.mkdirSync(realDir, { recursive: true });
+      fs.writeFileSync(path.join(realDir, 'file.txt'), 'content');
+
+      try {
+        fs.symlinkSync(realDir, symlinkDir, 'dir');
+
+        expect.soft(fs.existsSync(symlinkDir)).toBe(true);
+        expect.soft(fs.existsSync(realDir)).toBe(true);
+
+        service.removeDir(symlinkDir);
+
+        expect.soft(fs.existsSync(symlinkDir)).toBe(false);
+        expect.soft(fs.existsSync(realDir)).toBe(true); // Original should still exist
+      } catch {
+        // Symlink creation might fail on some systems, skip this test
+        console.log('Skipping symlink test - system does not support symlinks');
+      }
+    });
+  });
 });
