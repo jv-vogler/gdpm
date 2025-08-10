@@ -6,12 +6,12 @@ type Props = {
   };
 };
 
-class PackageError extends AppError {
+class PackageServiceError extends AppError {
   constructor(message: string, { options }: Props = {}) {
     super(message, { options });
 
-    Error.captureStackTrace(this, PackageError);
+    Error.captureStackTrace(this, PackageServiceError);
   }
 }
 
-export { PackageError };
+export { PackageServiceError };
