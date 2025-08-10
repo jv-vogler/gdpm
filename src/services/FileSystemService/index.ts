@@ -7,6 +7,10 @@ import { FileSystemError } from './errors';
 const TMP_DIR = path.join(os.tmpdir(), 'gdpm');
 
 const createFileSystemService = () => ({
+  currentFolderName: () => {
+    return path.basename(process.cwd());
+  },
+
   createDir: (path: string) => {
     try {
       fs.mkdirSync(path, { recursive: true });
@@ -66,6 +70,35 @@ const createFileSystemService = () => ({
       }
     } catch (error) {
       throw new FileSystemError('Failed to cleanup tmp directory', { options: { cause: error } });
+    }
+  },
+
+  readJson: (fileName: string) => {
+    if (!fileName.endsWith('.json')) {
+      throw new FileSystemError(`File ${fileName} is not a JSON file`);
+    }
+
+    try {
+      const content = fs.readFileSync(fileName, 'utf-8');
+      const jsonContent = JSON.parse(content) as unknown;
+
+      return jsonContent;
+    } catch (error) {
+      throw new FileSystemError(`Failed to read JSON file: ${fileName}`, {
+        options: { cause: error },
+      });
+    }
+  },
+
+  exists: (fileName: string) => fs.existsSync(fileName),
+
+  writeFile: (fileName: string, content: string) => {
+    try {
+      fs.writeFileSync(fileName, content, 'utf-8');
+    } catch (error) {
+      throw new FileSystemError(`Failed to write file: ${fileName}`, {
+        options: { cause: error },
+      });
     }
   },
 });

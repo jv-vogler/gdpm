@@ -6,7 +6,7 @@ import { createRegistryService } from '@/services/RegistryService';
 
 const fileSystemService = createFileSystemService();
 const gitService = createGitService();
-const manifestService = createManifestService();
+const manifestService = createManifestService({ FileSystem: fileSystemService });
 const packageService = createPackageService();
 const registryService = createRegistryService();
 
