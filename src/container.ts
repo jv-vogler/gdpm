@@ -7,7 +7,10 @@ import { createRegistryService } from '@/services/RegistryService';
 const fileSystemService = createFileSystemService();
 const gitService = createGitService();
 const manifestService = createManifestService({ FileSystem: fileSystemService });
-const packageService = createPackageService();
+const packageService = createPackageService({
+  FileSystem: fileSystemService,
+  Manifest: manifestService,
+});
 const registryService = createRegistryService();
 
 const container = {
