@@ -7,6 +7,8 @@ import { type Manifest, ManifestSchema, type Package, PackageSchema, VersionSche
 const MANIFEST_FILE_NAME = 'project/godot-package.json';
 const PROJECT_DIR = 'project';
 const GDIGNORE_FILE = 'project/.gdignore';
+const SCHEMA_URL =
+  'https://gist.githubusercontent.com/jv-vogler/75efaa0c79d7f52636cda333e1efc170/raw/godot-package.schema.json';
 
 type Dependencies = {
   FileSystem: FileSystemService;
@@ -92,6 +94,7 @@ const createManifestService = ({ FileSystem }: Dependencies) => {
       FileSystem.createDir(PROJECT_DIR);
 
       const defaultManifest: Manifest = {
+        $schema: SCHEMA_URL,
         name: FileSystem.currentFolderName(),
         version: '0.0.0',
         dependencies: {},

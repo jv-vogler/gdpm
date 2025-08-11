@@ -271,6 +271,8 @@ describe('ManifestService', () => {
       const result = service.init();
 
       const expectedManifest: Manifest = {
+        $schema:
+          'https://gist.githubusercontent.com/jv-vogler/75efaa0c79d7f52636cda333e1efc170/raw/godot-package.schema.json',
         name: folderName,
         version: '0.0.0',
         dependencies: {},

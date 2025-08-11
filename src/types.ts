@@ -11,6 +11,7 @@ export const PackageSchema = z.object({
 });
 
 export const ManifestSchema = z.object({
+  $schema: z.string().optional(),
   name: z.string().min(1, 'Manifest name cannot be empty'),
   version: VersionSchema,
   dependencies: z.record(z.string(), z.union([PackageSchema.omit({ name: true }), VersionSchema])),
