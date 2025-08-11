@@ -19,14 +19,14 @@ function findPackagePath(
   sourcePath: string,
   FileSystem: FileSystemService,
 ): string | null {
-  const directPackagePath = `${sourcePath}/godot-package.json`;
+  const directPackagePath = `${sourcePath}/project/godot-package.json`;
 
   if (FileSystem.exists(directPackagePath)) {
     return sourcePath;
   }
 
   const subfolderPackagePath = `${sourcePath}/${pkgInput}`;
-  const subfolderManifestPath = `${subfolderPackagePath}/godot-package.json`;
+  const subfolderManifestPath = `${subfolderPackagePath}/project/godot-package.json`;
 
   if (FileSystem.exists(subfolderManifestPath)) {
     return subfolderPackagePath;
@@ -49,11 +49,11 @@ function handleInstall(pkgInput: string) {
 
     if (!packagePath) {
       throw new Error(
-        `Package "${pkgInput}" not found. Expected godot-package.json in "${sourcePath}" or "${sourcePath}/${pkgInput}"`,
+        `Package "${pkgInput}" not found. Expected project/godot-package.json in "${sourcePath}" or "${sourcePath}/${pkgInput}"`,
       );
     }
 
-    const packageManifestPath = `${packagePath}/godot-package.json`;
+    const packageManifestPath = `${packagePath}/project/godot-package.json`;
     const packageManifest = FileSystem.readJson(packageManifestPath) as Package;
 
     const pkg: Package = {

@@ -4,7 +4,9 @@ import type { FileSystemService } from '@/services/FileSystemService';
 import { ManifestError } from '@/services/ManifestService/errors';
 import { type Manifest, ManifestSchema, type Package, PackageSchema, VersionSchema } from '@/types';
 
-const MANIFEST_FILE_NAME = 'godot-package.json';
+const MANIFEST_FILE_NAME = 'project/godot-package.json';
+const PROJECT_DIR = 'project';
+const GDIGNORE_FILE = 'project/.gdignore';
 
 type Dependencies = {
   FileSystem: FileSystemService;
@@ -86,14 +88,20 @@ const createManifestService = ({ FileSystem }: Dependencies) => {
         throw new ManifestError(`${MANIFEST_FILE_NAME} already exists`);
       }
 
+      // Create project directory
+      FileSystem.createDir(PROJECT_DIR);
+
       const defaultManifest: Manifest = {
         name: FileSystem.currentFolderName(),
-
         version: '0.0.0',
         dependencies: {},
       };
 
+      // Write manifest file
       FileSystem.writeFile(MANIFEST_FILE_NAME, JSON.stringify(defaultManifest, null, 2));
+
+      // Create .gdignore file
+      FileSystem.writeFile(GDIGNORE_FILE, '');
 
       return defaultManifest;
     },

@@ -32,6 +32,7 @@ describe('ManifestService', () => {
       readJson: vi.fn(),
       writeFile: vi.fn(),
       currentFolderName: vi.fn(),
+      createDir: vi.fn(),
     } as unknown as FileSystemService;
 
     service = createManifestService({ FileSystem: mockFileSystem });
@@ -44,7 +45,7 @@ describe('ManifestService', () => {
       const result = service.exists();
 
       expect.soft(result).toBe(true);
-      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith('godot-package.json');
+      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith('project/godot-package.json');
     });
 
     it('should return false when manifest file does not exist', () => {
@@ -53,7 +54,7 @@ describe('ManifestService', () => {
       const result = service.exists();
 
       expect.soft(result).toBe(false);
-      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith('godot-package.json');
+      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith('project/godot-package.json');
     });
   });
 
@@ -64,7 +65,7 @@ describe('ManifestService', () => {
       const result = service.read();
 
       expect.soft(result).toEqual(validManifest);
-      expect.soft(mockFileSystem.readJson).toHaveBeenCalledWith('godot-package.json');
+      expect.soft(mockFileSystem.readJson).toHaveBeenCalledWith('project/godot-package.json');
     });
 
     it('should throw ManifestError for invalid manifest structure', () => {
@@ -81,7 +82,7 @@ describe('ManifestService', () => {
       };
 
       expect.soft(readFn).toThrow(ManifestError);
-      expect.soft(readFn).toThrow('Invalid manifest file: godot-package.json');
+      expect.soft(readFn).toThrow('Invalid manifest file: project/godot-package.json');
     });
 
     it('should throw ManifestError for missing required fields', () => {
@@ -106,7 +107,10 @@ describe('ManifestService', () => {
 
       const expectedContent = JSON.stringify(validManifest, null, 2);
 
-      expect(mockFileSystem.writeFile).toHaveBeenCalledWith('godot-package.json', expectedContent);
+      expect(mockFileSystem.writeFile).toHaveBeenCalledWith(
+        'project/godot-package.json',
+        expectedContent,
+      );
     });
 
     it('should throw ManifestError when file write fails', () => {
@@ -121,7 +125,7 @@ describe('ManifestService', () => {
       };
 
       expect.soft(writeFn).toThrow(ManifestError);
-      expect.soft(writeFn).toThrow('Failed to write manifest file: godot-package.json');
+      expect.soft(writeFn).toThrow('Failed to write manifest file: project/godot-package.json');
     });
   });
 
@@ -273,9 +277,14 @@ describe('ManifestService', () => {
       };
 
       expect.soft(result).toEqual(expectedManifest);
+      expect.soft(mockFileSystem.createDir).toHaveBeenCalledWith('project');
       expect
         .soft(mockFileSystem.writeFile)
-        .toHaveBeenCalledWith('godot-package.json', JSON.stringify(expectedManifest, null, 2));
+        .toHaveBeenCalledWith(
+          'project/godot-package.json',
+          JSON.stringify(expectedManifest, null, 2),
+        );
+      expect.soft(mockFileSystem.writeFile).toHaveBeenCalledWith('project/.gdignore', '');
     });
 
     it('should create manifest with empty dependencies object', () => {
@@ -305,7 +314,7 @@ describe('ManifestService', () => {
       };
 
       expect.soft(initFn).toThrow(ManifestError);
-      expect.soft(initFn).toThrow('godot-package.json already exists');
+      expect.soft(initFn).toThrow('project/godot-package.json already exists');
       expect.soft(mockFileSystem.writeFile).not.toHaveBeenCalled();
     });
   });
