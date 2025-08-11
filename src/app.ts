@@ -176,6 +176,7 @@ export function createCli(): Command {
 
   program
     .command('install [pkg]')
+    .alias('i')
     .description('Install a package or all dependencies')
     .action(handleInstall);
 
