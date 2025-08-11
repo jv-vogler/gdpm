@@ -104,6 +104,11 @@ function handleInstallSingle(pkgInput: string) {
   try {
     console.log(`Installing package: ${pkgInput}`);
 
+    if (!Manifest.exists()) {
+      console.log('No manifest found. Initializing...');
+      Manifest.init();
+    }
+
     const manifest = Manifest.read();
     const rawSourcePath = manifest.defaultSource ?? '.';
     const sourcePath = expandPath(rawSourcePath);
