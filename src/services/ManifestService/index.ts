@@ -68,7 +68,9 @@ const createManifestService = ({ FileSystem }: Dependencies) => {
 
       const dependencyKey = key ?? pkg.name;
 
-      manifest.dependencies[dependencyKey] = pkg;
+      const { name: _name, ...dependencyValue } = pkg;
+
+      manifest.dependencies[dependencyKey] = dependencyValue;
 
       return manifest;
     },

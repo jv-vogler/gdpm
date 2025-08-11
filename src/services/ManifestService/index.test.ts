@@ -166,7 +166,12 @@ describe('ManifestService', () => {
 
       const result = service.install({ pkg: testPackage });
 
-      expect.soft(result.dependencies[testPackage.name]).toEqual(testPackage);
+      const expectedDependency = {
+        version: testPackage.version,
+        source: testPackage.source,
+      };
+
+      expect.soft(result.dependencies[testPackage.name]).toEqual(expectedDependency);
       expect
         .soft(result.dependencies['test-package'])
         .toEqual(validManifest.dependencies['test-package']);
@@ -183,7 +188,12 @@ describe('ManifestService', () => {
 
       const result = service.install({ pkg: updatedPackage });
 
-      expect(result.dependencies['test-package']).toEqual(updatedPackage);
+      const expectedDependency = {
+        version: updatedPackage.version,
+        source: updatedPackage.source,
+      };
+
+      expect(result.dependencies['test-package']).toEqual(expectedDependency);
     });
 
     it('should handle installing to manifest with no dependencies', () => {
@@ -197,7 +207,12 @@ describe('ManifestService', () => {
 
       const result = service.install({ pkg: testPackage });
 
-      expect.soft(result.dependencies[testPackage.name]).toEqual(testPackage);
+      const expectedDependency = {
+        version: testPackage.version,
+        source: testPackage.source,
+      };
+
+      expect.soft(result.dependencies[testPackage.name]).toEqual(expectedDependency);
       expect.soft(Object.keys(result.dependencies)).toHaveLength(1);
     });
   });
