@@ -35,7 +35,83 @@ function findPackagePath(
   return null;
 }
 
-function handleInstall(pkgInput: string) {
+function handleInstall(pkgInput?: string) {
+  if (!pkgInput) {
+    handleInstallAll();
+    return;
+  }
+
+  handleInstallSingle(pkgInput);
+}
+
+function installDependencies(dependencies: string[]) {
+  let installed = 0;
+  let failed = 0;
+
+  for (const pkgName of dependencies) {
+    try {
+      console.log(`\nInstalling ${pkgName}...`);
+      handleInstallSingle(pkgName);
+      installed++;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+
+      console.error(`❌ Failed to install ${pkgName}: ${errorMsg}`);
+      failed++;
+    }
+  }
+
+  console.log(
+    `\n📦 Installation complete: ${installed.toString()} installed, ${failed.toString()} failed`,
+  );
+
+  if (failed > 0) {
+    process.exit(1);
+  }
+}
+
+function handleInstallAll() {
+  const { Manifest } = container;
+
+  try {
+    console.log('Installing all dependencies...');
+
+    const manifest = Manifest.read();
+    const dependencies = Object.keys(manifest.dependencies);
+
+    if (dependencies.length === 0) {
+      console.log('⚠️ No dependencies found in manifest');
+      return;
+    }
+
+    console.log(`Found ${dependencies.length.toString()} dependencies to install:`);
+    dependencies.forEach((dep) => {
+      console.log(`  - ${dep}`);
+    });
+
+    installDependencies(dependencies);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    console.error(`❌ Failed to read dependencies: ${errorMessage}`);
+    process.exit(1);
+  }
+}
+
+function installOtherDependencies(installedPackageName: string) {
+  const { Manifest } = container;
+
+  const updatedManifest = Manifest.read();
+  const allDependencies = Object.keys(updatedManifest.dependencies);
+  const otherDependencies = allDependencies.filter((dep) => dep !== installedPackageName);
+
+  if (otherDependencies.length > 0) {
+    console.log(`\nInstalling ${otherDependencies.length.toString()} other dependencies...`);
+    installDependencies(otherDependencies);
+  }
+}
+
+function handleInstallSingle(pkgInput: string) {
   const { FileSystem, Manifest, Package } = container;
 
   try {
@@ -65,6 +141,8 @@ function handleInstall(pkgInput: string) {
     Package.install({ pkg, sourcePath: packagePath });
 
     console.log(`✅ Successfully installed ${pkg.name}@${pkg.version}`);
+
+    installOtherDependencies(pkg.name);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
@@ -111,7 +189,10 @@ export function createCli(): Command {
       console.log('pong');
     });
 
-  program.command('install <pkg>').description('Install a package').action(handleInstall);
+  program
+    .command('install [pkg]')
+    .description('Install a package or all dependencies')
+    .action(handleInstall);
 
   program.command('uninstall <pkg>').description('Uninstall a package').action(handleUninstall);
 
