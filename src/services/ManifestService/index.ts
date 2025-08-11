@@ -63,10 +63,12 @@ const createManifestService = ({ FileSystem }: Dependencies) => {
       return parsedPkg.data;
     },
 
-    install: ({ pkg }: { pkg: Package }): Manifest => {
+    install: ({ pkg, key }: { pkg: Package; key?: string }): Manifest => {
       const manifest = service.read();
 
-      manifest.dependencies[pkg.name] = pkg;
+      const dependencyKey = key ?? pkg.name;
+
+      manifest.dependencies[dependencyKey] = pkg;
 
       return manifest;
     },
@@ -90,7 +92,6 @@ const createManifestService = ({ FileSystem }: Dependencies) => {
         throw new ManifestError(`${MANIFEST_FILE_NAME} already exists`);
       }
 
-      // Create project directory
       FileSystem.createDir(PROJECT_DIR);
 
       const defaultManifest: Manifest = {
@@ -100,10 +101,8 @@ const createManifestService = ({ FileSystem }: Dependencies) => {
         dependencies: {},
       };
 
-      // Write manifest file
       FileSystem.writeFile(MANIFEST_FILE_NAME, JSON.stringify(defaultManifest, null, 2));
 
-      // Create .gdignore file
       FileSystem.writeFile(GDIGNORE_FILE, '');
 
       return defaultManifest;

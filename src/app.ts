@@ -98,19 +98,6 @@ function handleInstallAll() {
   }
 }
 
-function installOtherDependencies(installedPackageName: string) {
-  const { Manifest } = container;
-
-  const updatedManifest = Manifest.read();
-  const allDependencies = Object.keys(updatedManifest.dependencies);
-  const otherDependencies = allDependencies.filter((dep) => dep !== installedPackageName);
-
-  if (otherDependencies.length > 0) {
-    console.log(`\nInstalling ${otherDependencies.length.toString()} other dependencies...`);
-    installDependencies(otherDependencies);
-  }
-}
-
 function handleInstallSingle(pkgInput: string) {
   const { FileSystem, Manifest, Package } = container;
 
@@ -138,11 +125,9 @@ function handleInstallSingle(pkgInput: string) {
       source: packageManifest.source,
     };
 
-    Package.install({ pkg, sourcePath: packagePath });
+    Package.install({ pkg, sourcePath: packagePath, key: pkgInput });
 
     console.log(`✅ Successfully installed ${pkg.name}@${pkg.version}`);
-
-    installOtherDependencies(pkg.name);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 

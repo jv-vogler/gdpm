@@ -13,7 +13,7 @@ type Dependencies = {
 
 const createPackageService = ({ FileSystem, Manifest }: Dependencies) => {
   const service = {
-    install: ({ pkg, sourcePath }: { pkg: Package; sourcePath: string }) => {
+    install: ({ pkg, sourcePath, key }: { pkg: Package; sourcePath: string; key?: string }) => {
       if (!FileSystem.exists(sourcePath)) {
         throw new PackageServiceError(`Package source path does not exist: ${sourcePath}`);
       }
@@ -30,7 +30,7 @@ const createPackageService = ({ FileSystem, Manifest }: Dependencies) => {
 
       FileSystem.copyDirectoryContents(packageSourcePath, installPath);
 
-      const updatedManifest = Manifest.install({ pkg });
+      const updatedManifest = Manifest.install({ pkg, key });
 
       Manifest.write(updatedManifest);
     },
