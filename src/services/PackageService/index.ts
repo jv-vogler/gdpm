@@ -37,9 +37,15 @@ const createPackageService = ({ FileSystem, Manifest }: Dependencies) => {
 
     uninstall: ({ pkg }: { pkg: Package }) => {
       const installPath = path.join(process.cwd(), 'godot_modules', pkg.name);
+      const godotModulesPath = path.join(process.cwd(), 'godot_modules');
 
       if (FileSystem.exists(installPath)) {
         FileSystem.removeDir(installPath);
+      }
+
+      // Remove godot_modules directory if it's empty
+      if (FileSystem.exists(godotModulesPath) && FileSystem.isEmpty(godotModulesPath)) {
+        FileSystem.removeDir(godotModulesPath);
       }
 
       const updatedManifest = Manifest.uninstall({ pkg });

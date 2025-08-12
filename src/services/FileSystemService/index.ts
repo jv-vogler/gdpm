@@ -92,6 +92,22 @@ const createFileSystemService = () => ({
 
   exists: (fileName: string) => fs.existsSync(fileName),
 
+  isEmpty: (dirPath: string) => {
+    try {
+      if (!fs.existsSync(dirPath)) {
+        return true;
+      }
+
+      const items = fs.readdirSync(dirPath);
+
+      return items.length === 0;
+    } catch (error) {
+      throw new FileSystemError(`Failed to check if directory is empty: ${dirPath}`, {
+        options: { cause: error },
+      });
+    }
+  },
+
   writeFile: (fileName: string, content: string) => {
     try {
       fs.writeFileSync(fileName, content, 'utf-8');

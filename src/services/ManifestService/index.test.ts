@@ -105,7 +105,7 @@ describe('ManifestService', () => {
     it('should write manifest to file successfully', () => {
       service.write(validManifest);
 
-      const expectedContent = JSON.stringify(validManifest, null, 2);
+      const expectedContent = JSON.stringify(validManifest, null, 2) + '\n';
 
       expect(mockFileSystem.writeFile).toHaveBeenCalledWith(
         'project/godot-package.json',
@@ -299,7 +299,7 @@ describe('ManifestService', () => {
         .soft(mockFileSystem.writeFile)
         .toHaveBeenCalledWith(
           'project/godot-package.json',
-          JSON.stringify(expectedManifest, null, 2),
+          JSON.stringify(expectedManifest, null, 2) + '\n',
         );
       expect.soft(mockFileSystem.writeFile).toHaveBeenCalledWith('project/.gdignore', '');
     });

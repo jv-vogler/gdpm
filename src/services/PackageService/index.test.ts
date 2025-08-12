@@ -31,6 +31,7 @@ describe('PackageService', () => {
   beforeEach(() => {
     mockFileSystem = {
       exists: vi.fn(),
+      isEmpty: vi.fn(),
       copyDirectoryContents: vi.fn(),
       removeDir: vi.fn(),
     } as unknown as FileSystemService;
@@ -165,12 +166,15 @@ describe('PackageService', () => {
       };
 
       vi.mocked(mockFileSystem.exists).mockReturnValue(true);
+      vi.mocked(mockFileSystem.isEmpty).mockReturnValue(false); // godot_modules not empty
       vi.mocked(mockManifestService.uninstall).mockReturnValue(updatedManifest);
 
       service.uninstall({ pkg: testPackage });
 
       expect.soft(mockFileSystem.exists).toHaveBeenCalledWith(expectedInstallPath);
       expect.soft(mockFileSystem.removeDir).toHaveBeenCalledWith(expectedInstallPath);
+      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith('/mock/project/path/godot_modules');
+      expect.soft(mockFileSystem.isEmpty).toHaveBeenCalledWith('/mock/project/path/godot_modules');
       expect.soft(mockManifestService.uninstall).toHaveBeenCalledWith({ pkg: testPackage });
       expect.soft(mockManifestService.write).toHaveBeenCalledWith(updatedManifest);
     });
@@ -189,6 +193,7 @@ describe('PackageService', () => {
 
       expect.soft(mockFileSystem.exists).toHaveBeenCalledWith(expectedInstallPath);
       expect.soft(mockFileSystem.removeDir).not.toHaveBeenCalled();
+      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith('/mock/project/path/godot_modules');
       expect.soft(mockManifestService.uninstall).toHaveBeenCalledWith({ pkg: testPackage });
       expect.soft(mockManifestService.write).toHaveBeenCalledWith(updatedManifest);
     });
@@ -200,6 +205,7 @@ describe('PackageService', () => {
       };
 
       vi.mocked(mockFileSystem.exists).mockReturnValue(true);
+      vi.mocked(mockFileSystem.isEmpty).mockReturnValue(false);
       vi.mocked(mockManifestService.uninstall).mockReturnValue(testManifest);
 
       service.uninstall({ pkg: packageWithDifferentName });
@@ -212,6 +218,19 @@ describe('PackageService', () => {
 
       expect.soft(mockFileSystem.exists).toHaveBeenCalledWith(expectedDifferentInstallPath);
       expect.soft(mockFileSystem.removeDir).toHaveBeenCalledWith(expectedDifferentInstallPath);
+    });
+
+    it('removes godot_modules directory when empty after uninstall', () => {
+      vi.mocked(mockFileSystem.exists).mockReturnValue(true);
+      vi.mocked(mockFileSystem.isEmpty).mockReturnValue(true); // godot_modules is empty
+      vi.mocked(mockManifestService.uninstall).mockReturnValue(testManifest);
+
+      service.uninstall({ pkg: testPackage });
+
+      expect.soft(mockFileSystem.removeDir).toHaveBeenCalledWith(expectedInstallPath);
+      expect
+        .soft(mockFileSystem.removeDir)
+        .toHaveBeenCalledWith('/mock/project/path/godot_modules');
     });
 
     it('handles file system errors during removal', () => {
@@ -231,6 +250,7 @@ describe('PackageService', () => {
 
     it('handles manifest errors during uninstall', () => {
       vi.mocked(mockFileSystem.exists).mockReturnValue(true);
+      vi.mocked(mockFileSystem.isEmpty).mockReturnValue(false);
       vi.mocked(mockManifestService.uninstall).mockImplementation(() => {
         throw new Error('Manifest update failed');
       });
@@ -264,6 +284,7 @@ describe('PackageService', () => {
 
     it('handles manifest write errors during uninstall', () => {
       vi.mocked(mockFileSystem.exists).mockReturnValue(true);
+      vi.mocked(mockFileSystem.isEmpty).mockReturnValue(false);
       vi.mocked(mockManifestService.uninstall).mockReturnValue(testManifest);
       vi.mocked(mockManifestService.write).mockImplementation(() => {
         throw new Error('Write failed');
