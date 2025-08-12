@@ -35,7 +35,7 @@ const createManifestService = ({ FileSystem }: Dependencies) => {
 
     write: (manifest: Manifest) => {
       try {
-        const content = JSON.stringify(manifest, null, 2);
+        const content = JSON.stringify(manifest, null, 2) + '\n';
         const filePath = MANIFEST_FILE_NAME;
 
         FileSystem.writeFile(filePath, content);
@@ -103,7 +103,7 @@ const createManifestService = ({ FileSystem }: Dependencies) => {
         dependencies: {},
       };
 
-      FileSystem.writeFile(MANIFEST_FILE_NAME, JSON.stringify(defaultManifest, null, 2));
+      FileSystem.writeFile(MANIFEST_FILE_NAME, JSON.stringify(defaultManifest, null, 2) + '\n');
 
       FileSystem.writeFile(GDIGNORE_FILE, '');
 
