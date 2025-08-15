@@ -211,7 +211,7 @@ const mergeRules: Record<string, Record<string, MergeConfigEntry>> = {
   display: {
     'window/size/viewport_width': { value: 640, rule: 'add' },
     'window/size/viewport_height': { value: 360, rule: 'add' },
-    'window/size/mode': { value: 3, rule: 'add' },
+    'window/size/mode': { value: 2, rule: 'ignore' },
     'window/size/resizable': { value: 'false', rule: 'add' },
     'window/size/always_on_top': { value: 'true', rule: 'add' },
     'window/size/window_width_override': { value: 1280, rule: 'add' },
