@@ -203,8 +203,8 @@ const mergeRules: Record<string, Record<string, MergeConfigEntry>> = {
   debug: {
     'gdscript/warnings/unused_signal': { value: 0, rule: 'override' },
     'gdscript/warnings/untyped_declaration': { value: 1, rule: 'override' },
-    'gdscript/warnings/unsafe_property_access': { value: 1, rule: 'override' },
-    'gdscript/warnings/unsafe_method_access': { value: 1, rule: 'override' },
+    'gdscript/warnings/unsafe_property_access': { value: 2, rule: 'override' },
+    'gdscript/warnings/unsafe_method_access': { value: 2, rule: 'override' },
     'gdscript/warnings/unsafe_cast': { value: 1, rule: 'override' },
     'gdscript/warnings/unsafe_call_argument': { value: 1, rule: 'override' },
   },
