@@ -218,13 +218,13 @@ const mergeRules: Record<string, Record<string, MergeConfigEntry>> = {
     'window/size/window_height_override': { value: 720, rule: 'add' },
     'window/stretch/mode': { value: '"viewport"', rule: 'add' },
   },
-  file_customization: {
-    folder_colors: {
-      value:
-        '{\n"res://src/autoloads/": "gray",\n"res://src/components/": "purple",\n"res://src/entities/": "green",\n"res://src/lib/": "red",\n"res://src/screens/": "blue",\n"res://src/shared/": "orange",\n"res://src/ui/": "teal"\n}',
-      rule: 'add',
-    },
-  },
+  // file_customization: {
+  //   folder_colors: {
+  //     value:
+  //       '{\n"res://src/autoloads/": "gray",\n"res://src/components/": "purple",\n"res://src/entities/": "green",\n"res://src/lib/": "red",\n"res://src/screens/": "blue",\n"res://src/shared/": "orange",\n"res://src/ui/": "teal"\n}',
+  //     rule: 'add',
+  //   },
+  // },
   input_devices: {
     'pointing/android/enable_long_press_as_right_click': { value: 'true', rule: 'add' },
     'pointing/emulate_touch_from_mouse': { value: 'true', rule: 'add' },

@@ -101,6 +101,7 @@ const createManifestService = ({ FileSystem }: Dependencies) => {
         name: FileSystem.currentFolderName(),
         version: '0.0.0',
         dependencies: {},
+        defaultSource: '../packages',
       };
 
       FileSystem.writeFile(MANIFEST_FILE_NAME, JSON.stringify(defaultManifest, null, 2) + '\n');
