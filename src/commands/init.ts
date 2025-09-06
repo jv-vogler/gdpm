@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 import container from '@/container';
 
 export function handleInit() {
@@ -5,6 +8,13 @@ export function handleInit() {
 
   try {
     console.log('Initializing gdpm manifest...');
+
+    const srcPath = path.resolve(process.cwd(), 'src');
+
+    if (!fs.existsSync(srcPath)) {
+      fs.mkdirSync(srcPath);
+      console.log('✅ Created src directory');
+    }
 
     if (Manifest.exists()) {
       console.log('⚠️ gdpm.json already exists');
