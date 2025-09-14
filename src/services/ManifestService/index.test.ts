@@ -291,6 +291,36 @@ describe('ManifestService', () => {
         name: folderName,
         version: '0.0.0',
         dependencies: {},
+        defaultSource: '../packages',
+      };
+
+      expect.soft(result).toEqual(expectedManifest);
+      expect.soft(mockFileSystem.createDir).toHaveBeenCalledWith('project');
+      expect
+        .soft(mockFileSystem.writeFile)
+        .toHaveBeenCalledWith(
+          'project/godot-package.json',
+          JSON.stringify(expectedManifest, null, 2) + '\n',
+        );
+      expect.soft(mockFileSystem.writeFile).toHaveBeenCalledWith('project/.gdignore', '');
+    });
+
+    it('should create addon manifest when type is specified', () => {
+      const folderName = 'my-godot-addon';
+
+      vi.mocked(mockFileSystem.exists).mockReturnValue(false);
+      vi.mocked(mockFileSystem.currentFolderName).mockReturnValue(folderName);
+
+      const result = service.init('addon');
+
+      const expectedManifest: Manifest = {
+        $schema:
+          'https://gist.githubusercontent.com/jv-vogler/75efaa0c79d7f52636cda333e1efc170/raw/godot-package.schema.json',
+        name: folderName,
+        version: '0.0.0',
+        dependencies: {},
+        defaultSource: '../packages',
+        type: 'addon',
       };
 
       expect.soft(result).toEqual(expectedManifest);

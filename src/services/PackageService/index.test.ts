@@ -34,6 +34,7 @@ describe('PackageService', () => {
       isEmpty: vi.fn(),
       copyDirectoryContents: vi.fn(),
       removeDir: vi.fn(),
+      createDir: vi.fn(),
     } as unknown as FileSystemService;
 
     mockManifestService = {
@@ -53,10 +54,45 @@ describe('PackageService', () => {
 
   describe('install', () => {
     const sourcePath = '/tmp/package-source';
-    const packageSourcePath = path.join(sourcePath, 'src');
-    const expectedInstallPath = path.join('/mock/project/path', 'godot_modules', testPackage.name);
 
-    it('installs package successfully', () => {
+    const mockModuleInstallation = () => {
+      const existsMock = vi.mocked(mockFileSystem.exists);
+
+      existsMock.mockImplementation((filePath) => {
+        if (filePath === sourcePath) return true;
+
+        if (filePath === path.join(sourcePath, 'addons')) return false;
+
+        if (filePath === path.join(sourcePath, 'src')) return true;
+
+        return false;
+      });
+    };
+
+    const mockAddonInstallation = () => {
+      const existsMock = vi.mocked(mockFileSystem.exists);
+
+      existsMock.mockImplementation((filePath) => {
+        if (filePath === sourcePath) return true;
+
+        if (filePath === path.join(sourcePath, 'addons')) return true;
+
+        if (filePath === path.join(sourcePath, 'addons', 'test-package')) return true;
+
+        if (filePath === path.join('/mock/project/path', 'addons')) return false;
+
+        return false;
+      });
+    };
+
+    it('installs package successfully as module when src directory exists', () => {
+      const packageSourcePath = path.join(sourcePath, 'src');
+      const expectedInstallPath = path.join(
+        '/mock/project/path',
+        'godot_modules',
+        testPackage.name,
+      );
+
       const updatedManifest: Manifest = {
         ...testManifest,
         dependencies: {
@@ -65,20 +101,56 @@ describe('PackageService', () => {
         },
       };
 
-      const existsMock = vi.mocked(mockFileSystem.exists);
-
-      existsMock.mockReturnValue(true);
+      mockModuleInstallation();
 
       vi.mocked(mockManifestService.install).mockReturnValue(updatedManifest);
 
       service.install({ pkg: testPackage, sourcePath });
 
       expect.soft(mockFileSystem.exists).toHaveBeenCalledWith(sourcePath);
+      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith(path.join(sourcePath, 'addons'));
       expect.soft(mockFileSystem.exists).toHaveBeenCalledWith(packageSourcePath);
       expect
         .soft(mockFileSystem.copyDirectoryContents)
         .toHaveBeenCalledWith(packageSourcePath, expectedInstallPath);
       expect.soft(mockManifestService.install).toHaveBeenCalledWith({ pkg: testPackage });
+      expect.soft(mockManifestService.write).toHaveBeenCalledWith(updatedManifest);
+    });
+
+    it('installs package successfully as addon when addons directory exists', () => {
+      const addonsSourcePath = path.join(sourcePath, 'addons');
+      const expectedInstallPath = path.join('/mock/project/path', 'addons');
+
+      const addonPackage: Package = {
+        ...testPackage,
+        type: 'addon',
+      };
+
+      const updatedManifest: Manifest = {
+        ...testManifest,
+        dependencies: {
+          ...testManifest.dependencies,
+          [addonPackage.name]: addonPackage,
+        },
+      };
+
+      mockAddonInstallation();
+
+      vi.mocked(mockManifestService.install).mockReturnValue(updatedManifest);
+
+      service.install({ pkg: addonPackage, sourcePath });
+
+      const sourceAddonPath = path.join(addonsSourcePath, 'test-package');
+      const targetAddonPath = path.join(expectedInstallPath, 'test-package');
+
+      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith(sourcePath);
+      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith(addonsSourcePath);
+      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith(sourceAddonPath);
+      expect.soft(mockFileSystem.createDir).toHaveBeenCalledWith(expectedInstallPath);
+      expect
+        .soft(mockFileSystem.copyDirectoryContents)
+        .toHaveBeenCalledWith(sourceAddonPath, targetAddonPath);
+      expect.soft(mockManifestService.install).toHaveBeenCalledWith({ pkg: addonPackage });
       expect.soft(mockManifestService.write).toHaveBeenCalledWith(updatedManifest);
     });
 
@@ -97,10 +169,17 @@ describe('PackageService', () => {
     });
 
     it('throws PackageServiceError when src directory does not exist', () => {
+      const packageSourcePath = path.join(sourcePath, 'src');
       const existsMock = vi.mocked(mockFileSystem.exists);
 
-      existsMock.mockImplementation((path: string) => {
-        return path === sourcePath;
+      existsMock.mockImplementation((filePath: string) => {
+        if (filePath === sourcePath) return true;
+
+        if (filePath === path.join(sourcePath, 'addons')) return false;
+
+        if (filePath === packageSourcePath) return false;
+
+        return false;
       });
 
       const installFn = () => {
@@ -122,7 +201,19 @@ describe('PackageService', () => {
         version: '1.0.0',
       };
 
-      vi.mocked(mockFileSystem.exists).mockReturnValue(true);
+      const packageSourcePath = path.join(sourcePath, 'src');
+      const existsMock = vi.mocked(mockFileSystem.exists);
+
+      existsMock.mockImplementation((filePath: string) => {
+        if (filePath === sourcePath) return true;
+
+        if (filePath === path.join(sourcePath, 'addons')) return false;
+
+        if (filePath === packageSourcePath) return true;
+
+        return false;
+      });
+
       vi.mocked(mockManifestService.install).mockReturnValue(testManifest);
 
       service.install({ pkg: packageWithDifferentName, sourcePath });
@@ -180,20 +271,32 @@ describe('PackageService', () => {
     });
 
     it('uninstalls package successfully when not physically installed', () => {
+      const addonInstallPath = path.join('/mock/project/path', 'addons', testPackage.name);
+      const moduleInstallPath = path.join('/mock/project/path', 'godot_modules', testPackage.name);
+
       const existingDep = testManifest.dependencies['existing-package'];
       const updatedManifest: Manifest = {
         ...testManifest,
         dependencies: existingDep ? { 'existing-package': existingDep } : {},
       };
 
-      vi.mocked(mockFileSystem.exists).mockReturnValue(false);
+      const existsMock = vi.mocked(mockFileSystem.exists);
+
+      existsMock.mockImplementation((filePath: string) => {
+        if (filePath === addonInstallPath) return false;
+
+        if (filePath === moduleInstallPath) return false;
+
+        return false;
+      });
+
       vi.mocked(mockManifestService.uninstall).mockReturnValue(updatedManifest);
 
       service.uninstall({ pkg: testPackage });
 
-      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith(expectedInstallPath);
+      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith(addonInstallPath);
+      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith(moduleInstallPath);
       expect.soft(mockFileSystem.removeDir).not.toHaveBeenCalled();
-      expect.soft(mockFileSystem.exists).toHaveBeenCalledWith('/mock/project/path/godot_modules');
       expect.soft(mockManifestService.uninstall).toHaveBeenCalledWith({ pkg: testPackage });
       expect.soft(mockManifestService.write).toHaveBeenCalledWith(updatedManifest);
     });

@@ -18,6 +18,7 @@ export function createCli(): Command {
   program
     .command('init')
     .description('Initialize a gdpm manifest in the current directory')
+    .option('--addon', 'Initialize as an addon package')
     .action(handleInit);
 
   program

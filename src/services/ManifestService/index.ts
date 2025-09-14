@@ -2,7 +2,14 @@ import { z } from 'zod';
 
 import type { FileSystemService } from '@/services/FileSystemService';
 import { ManifestError } from '@/services/ManifestService/errors';
-import { type Manifest, ManifestSchema, type Package, PackageSchema, VersionSchema } from '@/types';
+import {
+  type Manifest,
+  ManifestSchema,
+  type Package,
+  PackageSchema,
+  type PackageType,
+  VersionSchema,
+} from '@/types';
 
 const MANIFEST_FILE_NAME = 'project/godot-package.json';
 const PROJECT_DIR = 'project';
@@ -89,7 +96,7 @@ const createManifestService = ({ FileSystem }: Dependencies) => {
       return manifest;
     },
 
-    init: (): Manifest => {
+    init: (type?: PackageType): Manifest => {
       if (service.exists()) {
         throw new ManifestError(`${MANIFEST_FILE_NAME} already exists`);
       }
@@ -102,6 +109,7 @@ const createManifestService = ({ FileSystem }: Dependencies) => {
         version: '0.0.0',
         dependencies: {},
         defaultSource: '../packages',
+        ...(type && { type }),
       };
 
       FileSystem.writeFile(MANIFEST_FILE_NAME, JSON.stringify(defaultManifest, null, 2) + '\n');
