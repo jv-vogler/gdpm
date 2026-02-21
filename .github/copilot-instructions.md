@@ -1,1 +1,1 @@
-- Never add comments
+- Please, Never add comments to your changes

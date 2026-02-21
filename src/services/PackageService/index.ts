@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
 import type { FileSystemService } from '@/services/FileSystemService';
@@ -36,10 +37,21 @@ const createPackageService = ({ FileSystem, Manifest }: Dependencies) => {
     if (FileSystem.exists(sourceAddonPath)) {
       FileSystem.copyDirectoryContents(sourceAddonPath, targetAddonPath);
     } else {
-      throw new PackageServiceError(
-        `Could not find addon '${pkg.name}' in addons directory: ${addonsSourcePath}. ` +
-          `Expected to find addon at: ${sourceAddonPath}`,
-      );
+      const addonDirs = fs
+        .readdirSync(addonsSourcePath, { withFileTypes: true })
+        .filter((dirent) => dirent.isDirectory())
+        .map((dirent) => dirent.name);
+
+      if (addonDirs.length === 0) {
+        throw new PackageServiceError(`No addon directories found in: ${addonsSourcePath}`);
+      }
+
+      for (const addonDir of addonDirs) {
+        const sourceDir = path.join(addonsSourcePath, addonDir);
+        const targetDir = path.join(projectAddonsPath, addonDir);
+
+        FileSystem.copyDirectoryContents(sourceDir, targetDir);
+      }
     }
   };
 
